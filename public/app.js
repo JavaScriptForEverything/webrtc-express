@@ -1,4 +1,5 @@
 const video = document.getElementById('video')
+const screenVideo = document.getElementById('screen')
 const muteBtn = document.getElementById('muteBtn')
 const cameraBtn = document.getElementById('cameraBtn')
 const selectCam = document.getElementById('selectCam')
@@ -80,7 +81,7 @@ const getMedia = async ({ cameraId = '', microphoneId = '' } = {}) => {
 
 	// WebRTC: Step-2: Add all the track to peerConnection instance
 	localStream.getTracks().forEach( (track) => {
-		peerConnection.addTrack(track)
+		peerConnection.addTrack(track, localStream)
 	})
 
 
@@ -94,13 +95,27 @@ const getMedia = async ({ cameraId = '', microphoneId = '' } = {}) => {
 	// WebRTC: Step-6: When both end have there secret in localDescription and other 
 	// 	secret into RemoteDescription then 'onicecandidate' event fire will fire.
 	// 	make sure this event fire after peerConnection is ready
-	peerConnection.addEventListener('icecandidate', (data) => {
-		console.log(data)
+	peerConnection.addEventListener('icecandidate', (evt) => {
+		if(evt.candidate) {
+			socket.emit('send-icecandidate', { candidate: evt.candidate, roomId })
+		}
+	})
+
+
+	// WebRTC: Step-8: When stream added by Step-7 this event fires
+	peerConnection.addEventListener('addstream', (evt) => {
+		screenVideo.srcObject = evt.stream
+		screenVideo.autoplay = true
+
+		screenVideo.addEventListener('loadedmetadata', () => {
+			screenVideo.play()
+		})
 	})
 
 }
 
 getMedia()
+
 
 
 
@@ -182,7 +197,6 @@ selectMicrophone.addEventListener('input', (evt) => {
 
 
 
-const screenVideo = document.getElementById('screen')
 
 screenShareBtn.addEventListener('click', async () => {
 	const shareStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true })
@@ -219,3 +233,8 @@ socket.on('receive-answer', async ({ answer }) => {
 	await peerConnection.setRemoteDescription(answer)
 })
 
+
+// WebRTC: Step-7: Receiving Answer, from Socket Server (Signaling Server)
+socket.on('receive-icecandidate', async ({ candidate }) => {
+	await peerConnection.addIceCandidate(candidate)
+})

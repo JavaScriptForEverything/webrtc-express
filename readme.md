@@ -97,7 +97,7 @@ let localStream
 
 	// WebRTC: Step-2: Add all the track to peerConnection instance
 	localStream.getTracks().forEach( (track) => {
-		peerConnection.addTrack( track )
+		peerConnection.addTrack( track, localStream )
 	})
 ```
 
@@ -140,10 +140,39 @@ socket.on('receive-answer', async ({ answer }) => {
 	// 	secret into RemoteDescription then 'onicecandidate' event fire will fire.
 	// 	make sure this event fire after peerConnection is ready
 ```
-peerConnection.addEventListener('icecandidate', (data) => {
-	console.log(data)
+	peerConnection.addEventListener('icecandidate', (evt) => {
+		if(evt.candidate) {
+			socket.emit('send-icecandidate', { candidate: evt.candidate, roomId })
+		}
+	})
+
+```
+
+
+- WebRTC: Step-7: Receiving Answer, from Socket Server (Signaling Server)
+
+```
+socket.on('receive-icecandidate', async ({ candidate }) => {
+	await peerConnection.addIceCandidate(candidate)
 })
 ```
+
+
+- WebRTC: Step-8: When stream added by Step-7 this event fires
+
+``` Remember: handle peerConnection event after media device are ready
+peerConnection.addEventListener('addstream', (evt) => {
+	screenVideo.srcObject = evt.stream
+	screenVideo.autoplay = true
+
+	screenVideo.addEventListener('loadedmetadata', () => {
+		screenVideo.play()
+	})
+})
+
+```
+
+
 
 
 - Server Actions: Listening to evens, and replay events 
@@ -164,6 +193,10 @@ io.on('connection', (socket) => {
 
 	socket.on('send-answer', ({ answer, roomId }) => {
 		socket.to(roomId).emit('receive-answer', { answer })
+	})
+
+	socket.on('send-icecandidate', ({ candidate, roomId }) => {
+		socket.to(roomId).emit('receive-icecandidate', { candidate })
 	})
 
 })

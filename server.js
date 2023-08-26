@@ -46,6 +46,11 @@ io.on('connection', (socket) => {
 		socket.to(roomId).emit('receive-answer', { answer })
 	})
 
+	socket.on('send-icecandidate', ({ candidate, roomId }) => {
+		socket.to(roomId).emit('receive-icecandidate', { candidate })
+	})
+
+
 })
 
 // --------------
