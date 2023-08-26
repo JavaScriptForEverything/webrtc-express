@@ -30,12 +30,22 @@ app.get('/:roomId', (req, res) => {
 //------[ socket ]--------
 
 io.on('connection', (socket) => {
-	// console.log(socket.id)
 
-	// socket.send(`Hi ${socket.id}`)
+	// join new user to room
 	socket.on('join-room', ({ roomId }) => {
 		socket.join(roomId)
+
+		socket.to(roomId).emit('joined-new-user')
 	})
+
+	socket.on('send-offer', ({ offer, roomId }) => {
+		socket.to(roomId).emit('receive-offer', { offer })
+	})
+
+	socket.on('send-answer', ({ answer, roomId }) => {
+		socket.to(roomId).emit('receive-answer', { answer })
+	})
+
 })
 
 // --------------

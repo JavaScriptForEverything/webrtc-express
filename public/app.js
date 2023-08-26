@@ -14,6 +14,7 @@ const socket = io() 		// will be available because of <script src='/socket.io/so
 let localStream = new MediaStream()
 let isMuted = false 
 let isCameraOn = false 
+let peerConnection 
 
 
 const populateOption = (device, type, parentElement) => {
@@ -62,8 +63,41 @@ const getMedia = async ({ cameraId = '', microphoneId = '' } = {}) => {
 	// Disable Sound on load
 	localStream.getAudioTracks().forEach( (track) => track.enabled = false)
 
-	getAllDevices()
-	socket.emit('join-room', { roomId }) 		// comes from index.ejs <scrip>
+
+	// Get mediadevices after getUserMedia() function else device.label will be missing
+	getAllDevices() 												
+
+	// Try to Join New User after Media available
+	socket.emit('join-room', { roomId }) 		// roomId comes from index.ejs <scrip>
+
+
+	// WebRTC: Step-1: Creating RTCPeerConnection
+	// 	Firefox require TURN server may be it is bug, but in Chrome it works file
+	const configuration = {
+    // "iceServers": [{ "url": "stun:stun2.1.google.com:19302" }]
+	}
+	peerConnection = new RTCPeerConnection(configuration)
+
+	// WebRTC: Step-2: Add all the track to peerConnection instance
+	localStream.getTracks().forEach( (track) => {
+		peerConnection.addTrack(track)
+	})
+
+
+	// WebRTC: Step-3: Create Offer, passing information to Socket Server (Signaling Server)
+	const offer = await peerConnection.createOffer()
+	await peerConnection.setLocalDescription(offer)
+
+	socket.emit('send-offer', { offer, roomId })
+
+
+	// WebRTC: Step-6: When both end have there secret in localDescription and other 
+	// 	secret into RemoteDescription then 'onicecandidate' event fire will fire.
+	// 	make sure this event fire after peerConnection is ready
+	peerConnection.addEventListener('icecandidate', (data) => {
+		console.log(data)
+	})
+
 }
 
 getMedia()
@@ -163,4 +197,25 @@ screenShareBtn.addEventListener('click', async () => {
 
 
 
+// Socket
+
+socket.on('joined-new-user', () => {
+	console.log('New User joined')
+})
+
+// WebRTC: Step-4: Receiving Offer, from Socket Server (Signaling Server)
+socket.on('receive-offer', async ({ offer }) => {
+	await peerConnection.setRemoteDescription(offer)
+
+	const answer = await peerConnection.createAnswer()
+	await peerConnection.setLocalDescription(answer)
+
+	socket.emit('send-answer', { answer, roomId})
+})
+
+
+// WebRTC: Step-5: Receiving Answer, from Socket Server (Signaling Server)
+socket.on('receive-answer', async ({ answer }) => {
+	await peerConnection.setRemoteDescription(answer)
+})
 
