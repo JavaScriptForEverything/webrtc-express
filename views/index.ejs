@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WebRTC</title>
+</head>
+<body>
+	<p>Web RTC</p>
+
+	<div>
+		<video id="video" width="200" height="113" style="border: 1px solid red" ></video>
+		<video id="screen" width="200" height="113" style="border: 1px solid orange" ></video>
+	</div>
+
+	<div>
+		<button id="muteBtn">Mute</button>
+		<button id="cameraBtn">Turn Camera OFF</button>
+	</div>
+
+
+	<p>Camera devices</p>
+	<select id="selectCam" >
+		<option disabled selected>Select Camera</option>
+		<!-- <option value="1">One</option> -->
+		<!-- <option value="2">Two</option> -->
+		<!-- <option value="3">Three</option> -->
+	</select>
+
+	<p>Audio devices</p>
+	<select id="selectMicrophone" >
+		<option disabled selected>Select Microphone</option>
+		<!-- <option value="1">One</option> -->
+		<!-- <option value="2">Two</option> -->
+		<!-- <option value="3">Three</option> -->
+	</select>
+
+	<div>
+		<button id="screenShareBtn">Screen Share</button>
+	</div>
+
+	<div id="demo"></div>
+
+
+	<!-- First -->
+	<script>
+		// app.render('index', { roomId }) only be captured into: 	index.ejs > script
+		const roomId = "<%= roomId %>" 				
+	</script>
+	<script src="/socket.io/socket.io.js"></script> 	<!-- second	 -->
+	<script src="/app.js"></script>
+	<script src="/socket.js"></script>
+</body>
+</html>

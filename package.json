@@ -1,0 +1,22 @@
+{
+ "name": "webrtc-5-bangla-youtube",
+ "version": "1.0.0",
+ "main": "server.js",
+ "license": "MIT",
+ "scripts": {
+  "dev": "nodemon server.js",
+  "start": "NODE_ENV=production node server.js",
+	"share": "lt --port 5000"
+ },
+ "dependencies": {
+  "dotenv": "^16.3.1",
+  "ejs": "^3.1.9",
+  "express": "^4.18.2",
+  "socket.io": "^4.7.2"
+ },
+ "devDependencies": {
+  "eslint": "^8.48.0",
+  "localtunnel": "^2.0.2",
+  "nodemon": "^3.0.1"
+ }
+}
